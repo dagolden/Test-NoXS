@@ -1,0 +1,13 @@
+MANIFEST
+README
+LICENSE
+Todo
+Changes
+MANIFEST.SKIP
+t/pod-coverage.t
+t/pod.t
+Build.PL
+lib/Test/NoXS.pm
+t/01_Test_NoXS.t
+Makefile.PL
+META.yml

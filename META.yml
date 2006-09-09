@@ -1,0 +1,18 @@
+---
+name: Test-NoXS
+version: 1.00
+author:
+  - David A. Golden <dagolden@cpan.org>
+abstract: Prevent a module from loading its XS code
+license: perl
+resources:
+  license: http://dev.perl.org/licenses/
+requires:
+  Fcntl: 0
+  Scalar::Util: 1.01
+  Test::More: 0.45
+provides:
+  Test::NoXS:
+    file: lib/Test/NoXS.pm
+    version: 1.00
+generated_by: Module::Build version 0.2703
