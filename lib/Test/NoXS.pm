@@ -6,10 +6,16 @@ use strict;
 # use warnings; # only for Perl >= 5.6
 
 my @no_xs_modules;
+my $no_xs_all;
 
 sub import {
     my $class = shift;
-    push @no_xs_modules, @_;
+    if  ( grep { /:all/ } @_ ) {
+      $no_xs_all = 1;
+    }
+    else { 
+      push @no_xs_modules, @_;
+    }
 }
     
 # Overload DynaLoader and XSLoader to fake lack of XS for designated modules
@@ -19,7 +25,8 @@ sub import {
     require DynaLoader;
     my $bootstrap_orig = *{"DynaLoader::bootstrap"}{CODE};
     *DynaLoader::bootstrap = sub {
-        die if grep { $_[0] eq $_ } @no_xs_modules;
+        die "XS disabled" if $no_xs_all;
+        die "XS disable for $_[0]" if grep { $_[0] eq $_ } @no_xs_modules;
         goto $bootstrap_orig;
     };
     # XSLoader entered Core in Perl 5.6
@@ -27,7 +34,8 @@ sub import {
         require XSLoader;
         my $xsload_orig = *{"XSLoader::load"}{CODE};
         *XSLoader::load = sub {
-            die if grep { $_[0] eq $_ } @no_xs_modules;
+            die "XS disabled" if $no_xs_all;
+            die "XS disable for $_[0]" if grep { $_[0] eq $_ } @no_xs_modules;
             goto $xsload_orig;
         };
     }

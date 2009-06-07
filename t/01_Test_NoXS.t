@@ -18,7 +18,7 @@ eval $use_SU;
 
 ok( $@, "'$use_SU' threw an error" );
 
-like( $@, '/weak references/i', 
+like( $@, '/weak/i', 
     "error matched warning for unavailable weak references (i.e XS not loaded)"
 );
 
