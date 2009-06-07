@@ -1,4 +1,8 @@
 Revision history for Perl module Test::NoXS
 
+1.01 Sun Jun  7 10:42:31 EDT 2009
+    - added ':all' import argument to disable all XS loading
+      (requested by Michael Schwern)
+
 1.00 Fri Mar 10 13:40:50 EST 2006
     - initial release

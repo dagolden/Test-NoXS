@@ -59,6 +59,9 @@ Test::NoXS - Prevent a module from loading its XS code
  
  like( $@, qr/weak references/i, "Scalar::Util failed to load XS" );
 
+ # Disable all XS loading
+ use Test::NoXS ':all';
+
 =head1 DESCRIPTION
 
 This modules hijacks L<DynaLoader> and L<XSLoader> to prevent them from loading
@@ -69,14 +72,13 @@ pure-Perl alternative.
 =head1 USAGE
 
 Modules that should not load XS should be given as a list of arguments to C<use
-Test::NoXS>.
+Test::NoXS>.  Alternatively, giving ':all' as an argument will disable all 
+future attempts to load XS.
 
 =head1 BUGS
 
-Please report any bugs or feature using the CPAN Request Tracker.  
-Bugs can be submitted by email to C<bug-Test-NoXS@rt.cpan.org> or 
-through the web interface at 
-L<http://rt.cpan.org/Public/Dist/Display.html?Name=Test-NoXS>
+Please report any bugs or feature requests using the CPAN Request Tracker  web
+interface at L<http://rt.cpan.org/Public/Dist/Display.html?Name=Test-NoXS>
 
 When submitting a bug or request, please include a test-file or a patch to an
 existing test-file that illustrates the bug or desired feature.
@@ -91,7 +93,7 @@ http://dagolden.com/
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2006 by David A. Golden
+Copyright (c) 2006-2009 by David A. Golden
 
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
