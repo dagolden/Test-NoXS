@@ -1,8 +1,8 @@
 package Test::NoXS;
 
-$VERSION = "1.00";
-
 use strict;
+$Test::NoXS::VERSION = "1.01";
+
 # use warnings; # only for Perl >= 5.6
 
 my @no_xs_modules;
