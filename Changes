@@ -2,6 +2,8 @@ Revision history for Perl module Test::NoXS
 
 {{$NEXT}}
 
+1.02      2013-03-10 00:00:27 America/New_York
+
     [FIXED]
 
     - fix tests that broke when Scalar::Util stopped offering
