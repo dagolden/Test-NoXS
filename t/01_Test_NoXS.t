@@ -2,25 +2,22 @@
 use strict;
 
 use Test::More;
+use Module::Implementation;
 
-plan tests =>  6;
+plan tests =>  5;
 
 require_ok( 'Test::NoXS' );
 
 # Scalar::Util actually bootstraps List::Util
-eval "use Test::NoXS qw( List::Util DB_File)";
+eval "use Test::NoXS qw( Class::Load::XS DB_File)";
 
-is( $@, q{},  "told Test::NoXS not to load XS for Scalar::Util or DB_File" );
+is( $@, q{},  "told Test::NoXS not to load XS for Class::Load::XS or DB_File" );
 
-my $use_SU = "use Scalar::Util qw( weaken )";
+my $use_CL = "use Class::Load";
 
-eval $use_SU;
+eval $use_CL;
 
-ok( $@, "'$use_SU' threw an error" );
-
-like( $@, '/weak/i', 
-    "error matched warning for unavailable weak references (i.e XS not loaded)"
-);
+is( Module::Implementation::implementation_for("Class::Load"), "PP", "Class::Load using PP" );
 
 my $use_F = "use Fcntl qw( LOCK_EX )";
 

@@ -10,7 +10,7 @@ require_ok( 'Test::NoXS' );
 # Scalar::Util actually bootstraps List::Util
 eval "use Test::NoXS ':all'";
 
-is( $@, q{},  "told Test::NoXS not to load XS for Scalar::Util or DB_File" );
+is( $@, q{},  "told Test::NoXS not to load any XS" );
 
 my $use_F = "use Fcntl qw( LOCK_EX )";
 
