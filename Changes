@@ -1,5 +1,9 @@
 Revision history for Perl module Test::NoXS
 
+{{$NEXT}}
+
+    [FIXED]
+
     - fix tests that broke when Scalar::Util stopped offering
       XS or PP; using Class::Load instead
 
