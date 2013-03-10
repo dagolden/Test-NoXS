@@ -20,12 +20,14 @@ sub import {
 # Overload DynaLoader and XSLoader to fake lack of XS for designated modules
 {
     no strict 'refs';
+    no warnings 'redefine';
     local $^W;
     require DynaLoader;
     my $bootstrap_orig = *{"DynaLoader::bootstrap"}{CODE};
     *DynaLoader::bootstrap = sub {
+        my $caller = @_ ? $_[0] : caller;
         die "XS disabled" if $no_xs_all;
-        die "XS disable for $_[0]" if grep { $_[0] eq $_ } @no_xs_modules;
+        die "XS disable for $caller" if grep { $caller eq $_ } @no_xs_modules;
         goto $bootstrap_orig;
     };
     # XSLoader entered Core in Perl 5.6
