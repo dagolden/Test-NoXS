@@ -4,17 +4,36 @@ package Test::NoXS;
 # ABSTRACT: Prevent a module from loading its XS code
 # VERSION
 
+use Module::CoreList;
+
 my @no_xs_modules;
 my $no_xs_all;
+my $xs_core_only;
 
 sub import {
     my $class = shift;
     if  ( grep { /:all/ } @_ ) {
       $no_xs_all = 1;
     }
+    elsif ( grep { /:xs_core_only/ } @_ ) {
+        $xs_core_only = 1;
+    }
     else {
       push @no_xs_modules, @_;
     }
+}
+
+#die unless module is in core and hasn't been upgraded.
+sub _module_in_core {
+    my $caller = shift;
+    die "XS disabled for non-core modules" unless Module::CoreList::is_core( $caller );
+    my $core_module_version = $Module::CoreList::version{$]}{$caller};
+    my $module_version = $caller->VERSION;
+    if( $core_module_version != $module_version ) {
+        die "$caller installed version: $module_version"
+        ." != $core_module_version ( shipped with perl $^V )";
+    }
+    return 1;
 }
 
 # Overload DynaLoader and XSLoader to fake lack of XS for designated modules
@@ -24,10 +43,14 @@ sub import {
     local $^W;
     require DynaLoader;
     my $bootstrap_orig = *{"DynaLoader::bootstrap"}{CODE};
+
     *DynaLoader::bootstrap = sub {
         my $caller = @_ ? $_[0] : caller;
         die "XS disabled" if $no_xs_all;
         die "XS disable for $caller" if grep { $caller eq $_ } @no_xs_modules;
+        if( $xs_core_only && _module_in_core( $caller )) {
+            goto $bootstrap_orig;
+        }
         goto $bootstrap_orig;
     };
     # XSLoader entered Core in Perl 5.6
@@ -38,6 +61,9 @@ sub import {
             my $caller = @_ ? $_[0] : caller;
             die "XS disabled" if $no_xs_all;
             die "XS disable for $caller" if grep { $caller eq $_ } @no_xs_modules;
+            if( $xs_core_only && _module_in_core( $caller )) {
+                goto $bootstrap_orig;
+            }
             goto $xsload_orig;
         };
     }
