@@ -89,6 +89,9 @@ sub test_module_in_core {
     # Disable all XS loading
     use Test::NoXS ':all';
 
+    # Disable all XS loading except core modules
+    use Test::NoXS ':xs_core_only';
+
 =head1 DESCRIPTION
 
 This modules hijacks L<DynaLoader> and L<XSLoader> to prevent them from loading
@@ -100,7 +103,8 @@ pure-Perl alternative.
 
 Modules that should not load XS should be given as a list of arguments to C<use
 Test::NoXS>.  Alternatively, giving ':all' as an argument will disable all
-future attempts to load XS.
+future attempts to load XS. Passing ':xs_core_only' works like ':all' but will
+allow loading of core modules that have not been upgraded from the core version.
 
 =cut
 
