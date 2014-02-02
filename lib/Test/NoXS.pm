@@ -4,17 +4,40 @@ package Test::NoXS;
 # ABSTRACT: Prevent a module from loading its XS code
 # VERSION
 
+use Module::CoreList;
+use version;
+
 my @no_xs_modules;
 my $no_xs_all;
+my $xs_core_only;
+
+our $PERL_CORE_VERSION = $^V;
 
 sub import {
     my $class = shift;
     if  ( grep { /:all/ } @_ ) {
       $no_xs_all = 1;
     }
+    elsif ( grep { /:xs_core_only/ } @_ ) {
+        $xs_core_only = 1;
+    }
     else {
       push @no_xs_modules, @_;
     }
+}
+
+#die unless module is in core and hasn't been upgraded.
+sub test_module_in_core {
+    my $module = shift;
+    my $v = version->declare($PERL_CORE_VERSION)->numify;
+    die "XS disabled for non-core modules" unless Module::CoreList::is_core( $module, undef, $v );
+    my $core_module_version = $Module::CoreList::version{$v}{$module};
+    my $module_version = $module->VERSION;
+    if( $core_module_version != $module_version ) {
+        die "$module installed version: $module_version"
+        ." != $core_module_version ( shipped with perl $PERL_CORE_VERSION )";
+    }
+    return 1;
 }
 
 # Overload DynaLoader and XSLoader to fake lack of XS for designated modules
@@ -24,10 +47,14 @@ sub import {
     local $^W;
     require DynaLoader;
     my $bootstrap_orig = *{"DynaLoader::bootstrap"}{CODE};
+
     *DynaLoader::bootstrap = sub {
         my $caller = @_ ? $_[0] : caller;
         die "XS disabled" if $no_xs_all;
         die "XS disable for $caller" if grep { $caller eq $_ } @no_xs_modules;
+        if( $xs_core_only && test_module_in_core( $caller )) {
+            goto $bootstrap_orig;
+        }
         goto $bootstrap_orig;
     };
     # XSLoader entered Core in Perl 5.6
@@ -38,6 +65,9 @@ sub import {
             my $caller = @_ ? $_[0] : caller;
             die "XS disabled" if $no_xs_all;
             die "XS disable for $caller" if grep { $caller eq $_ } @no_xs_modules;
+            if( $xs_core_only && test_module_in_core( $caller )) {
+                goto $bootstrap_orig;
+            }
             goto $xsload_orig;
         };
     }
@@ -61,6 +91,9 @@ sub import {
     # Disable all XS loading
     use Test::NoXS ':all';
 
+    # Disable all XS loading except core modules
+    use Test::NoXS ':xs_core_only';
+
 =head1 DESCRIPTION
 
 This modules hijacks L<DynaLoader> and L<XSLoader> to prevent them from loading
@@ -72,7 +105,8 @@ pure-Perl alternative.
 
 Modules that should not load XS should be given as a list of arguments to C<use
 Test::NoXS>.  Alternatively, giving ':all' as an argument will disable all
-future attempts to load XS.
+future attempts to load XS. Passing ':xs_core_only' works like ':all' but will
+allow loading of core modules that have not been upgraded from the core version.
 
 =cut
 
