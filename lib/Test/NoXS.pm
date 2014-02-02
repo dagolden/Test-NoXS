@@ -5,12 +5,13 @@ package Test::NoXS;
 # VERSION
 
 use Module::CoreList;
+use version;
 
 my @no_xs_modules;
 my $no_xs_all;
 my $xs_core_only;
 
-our $PERL_CORE_VERSION = $];
+our $PERL_CORE_VERSION = $^V;
 
 sub import {
     my $class = shift;
@@ -28,12 +29,13 @@ sub import {
 #die unless module is in core and hasn't been upgraded.
 sub test_module_in_core {
     my $module = shift;
-    die "XS disabled for non-core modules" unless Module::CoreList::is_core( $module );
-    my $core_module_version = $Module::CoreList::version{$PERL_CORE_VERSION}{$module};
+    my $v = version->declare($PERL_CORE_VERSION)->numify;
+    die "XS disabled for non-core modules" unless Module::CoreList::is_core( $module, undef, $v );
+    my $core_module_version = $Module::CoreList::version{$v}{$module};
     my $module_version = $module->VERSION;
     if( $core_module_version != $module_version ) {
         die "$module installed version: $module_version"
-        ." != $core_module_version ( shipped with perl $^V )";
+        ." != $core_module_version ( shipped with perl $PERL_CORE_VERSION )";
     }
     return 1;
 }
