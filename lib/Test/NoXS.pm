@@ -10,6 +10,7 @@ use Module::CoreList 3.00;
 my @no_xs_modules;
 my $no_xs_all;
 my $xs_core_only;
+my $xs_core_or_dual;
 
 our $PERL_CORE_VERSION = sprintf( "%vd", $^V );
 
@@ -21,22 +22,39 @@ sub import {
     elsif ( grep { /:xs_core_only/ } @_ ) {
         $xs_core_only = 1;
     }
+    elsif ( grep { /:xs_core_or_dual/ } @_ ) {
+        $xs_core_or_dual = 1;
+    }
     else {
         push @no_xs_modules, @_;
     }
 }
 
-#die unless module is in core and hasn't been upgraded.
-sub _test_module_in_core {
+sub _assert_module {
+    my $module = shift;
+    die "XS disabled\n" if $no_xs_all;
+    die "XS disabled for $module\n" if grep { $module eq $_ } @no_xs_modules;
+    _assert_in_core($module) if $xs_core_or_dual || $xs_core_only;
+    _assert_exact_core_version($module) if $xs_core_only;
+    return 1;
+}
+
+sub _assert_in_core {
     my $module = shift;
     # Uses explicit $PERL_CORE_VERSION instead of default for testing
     die "XS disabled for non-core modules"
       unless Module::CoreList::is_core( $module, undef, $PERL_CORE_VERSION );
+    return 1;
+}
+
+sub _assert_exact_core_version {
+    my $module = shift;
+    # Uses explicit $PERL_CORE_VERSION instead of default for testing
     my $core_module_version = $Module::CoreList::version{$PERL_CORE_VERSION}{$module};
     my $module_version      = $module->VERSION;
-    if ( $core_module_version != $module_version ) {
+    if ( $core_module_version ne $module_version ) {
         die "$module installed version: $module_version"
-          . " != $core_module_version ( shipped with perl $PERL_CORE_VERSION )";
+          . " ne $core_module_version ( shipped with perl $PERL_CORE_VERSION )";
     }
     return 1;
 }
@@ -45,17 +63,14 @@ sub _test_module_in_core {
 {
     no strict 'refs';
     no warnings 'redefine';
+    no warnings 'once';
     local $^W;
     require DynaLoader;
     my $bootstrap_orig = *{"DynaLoader::bootstrap"}{CODE};
 
     *DynaLoader::bootstrap = sub {
         my $caller = @_ ? $_[0] : caller;
-        die "XS disabled" if $no_xs_all;
-        die "XS disable for $caller" if grep { $caller eq $_ } @no_xs_modules;
-        if ( $xs_core_only && _test_module_in_core($caller) ) {
-            goto $bootstrap_orig;
-        }
+        _assert_module($caller);
         goto $bootstrap_orig;
     };
     # XSLoader entered Core in Perl 5.6
@@ -64,11 +79,7 @@ sub _test_module_in_core {
         my $xsload_orig = *{"XSLoader::load"}{CODE};
         *XSLoader::load = sub {
             my $caller = @_ ? $_[0] : caller;
-            die "XS disabled" if $no_xs_all;
-            die "XS disable for $caller" if grep { $caller eq $_ } @no_xs_modules;
-            if ( $xs_core_only && _test_module_in_core($caller) ) {
-                goto $bootstrap_orig;
-            }
+            _assert_module($caller);
             goto $xsload_orig;
         };
     }
@@ -91,7 +102,10 @@ sub _test_module_in_core {
     # Disable all XS loading
     use Test::NoXS ':all';
 
-    # Disable all XS loading except core modules
+    # Disable all XS loading except core or dual-life modules
+    use Test::NoXS ':xs_core_or_dual';
+
+    # Disable all XS loading except modules that shipped in core
     use Test::NoXS ':xs_core_only';
 
 =head1 DESCRIPTION
@@ -103,10 +117,19 @@ pure-Perl alternative.
 
 =head1 USAGE
 
-Modules that should not load XS should be given as a list of arguments to C<use
-Test::NoXS>.  Alternatively, giving ':all' as an argument will disable all
-future attempts to load XS. Passing ':xs_core_only' works like ':all' but will
-allow loading of core modules that have not been upgraded from the core version.
+Arguments on the use line control which XS modules are allowed.  One and only
+one of the following options are allowed:
+
+=for :list
+* C<:all> — all XS loading is disabled
+* C<:xs_core_or_dual> — XS loading is disabled except for modules that are
+  core modules in the current perl, even if they have been subsequently
+  upgraded from CPAN
+* C<:xs_core_only> — XS loading is disabled except for modules that shipped
+  with the current perl.  Modules upgraded from CPAN will have XS disabled.
+  This vaguely simulates upgrading dual-life modules on a system without a
+  compiler.
+* a list of module names — disables XS loading for these specific modules only
 
 =cut
 

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
-plan tests => 4;
+plan tests => 6;
 
 require_ok('Test::NoXS');
 eval "use Test::NoXS ':xs_core_only'";
@@ -26,13 +26,15 @@ is( $@, q{}, "told Test::NoXS only to allow core modules to load XS" );
 
 {
     local $Test::NoXS::PERL_CORE_VERSION = '5.014002'; #version 1.23 for List::Util
-    ok Test::NoXS::_test_module_in_core('List::Util'),
-      "Mock perl version $Test::NoXS::PERL_CORE_VERSION and Mock List::Util version 1.23";
+    ok Test::NoXS::_assert_in_core('List::Util'),
+      "$Test::NoXS::PERL_CORE_VERSION had List::Util in core";
+    ok Test::NoXS::_assert_exact_core_version('List::Util'),
+      "$Test::NoXS::PERL_CORE_VERSION had List::Util version 1.23 in core";
 
-    eval {
-        Test::NoXS::_test_module_in_core('Cwd');
-        fail "should never get here";
-    };
+    ok Test::NoXS::_assert_in_core('Cwd'),
+      "$Test::NoXS::PERL_CORE_VERSION had Cwd in core";
+
+    eval { Test::NoXS::_assert_exact_core_version('Cwd'); };
     ( my $err = $@ ) =~ s/ at \S+ line.*//;
     like $err, '/3\.99/', "Died properly: $err";
 };
