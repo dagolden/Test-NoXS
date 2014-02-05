@@ -1,6 +1,15 @@
 Revision history for Perl module Test::NoXS
 
 {{$NEXT}}
+    
+    [INCOMPATIBLE CHANGES]
+
+    - Dropped support for Perls before v5.6
+
+    [ADDED]
+
+    - Added :xs_core_only and :xs_core_or_dual options
+      (Sam Kaufman and David Golden)
 
 1.02      2013-03-10 00:00:27 America/New_York
 
