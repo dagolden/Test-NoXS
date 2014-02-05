@@ -1,3 +1,4 @@
+use 5.006;
 use strict;
 use warnings;
 
@@ -6,6 +7,8 @@ package Test::NoXS;
 # VERSION
 
 use Module::CoreList 3.00;
+require DynaLoader;
+require XSLoader;
 
 my @no_xs_modules;
 my $no_xs_all;
@@ -60,29 +63,16 @@ sub _assert_exact_core_version {
 }
 
 # Overload DynaLoader and XSLoader to fake lack of XS for designated modules
-{
+for my $orig (qw/DynaLoader::bootstrap XSLoader::load/) {
+    local $^W;
     no strict 'refs';
     no warnings 'redefine';
-    no warnings 'once';
-    local $^W;
-    require DynaLoader;
-    my $bootstrap_orig = *{"DynaLoader::bootstrap"}{CODE};
-
-    *DynaLoader::bootstrap = sub {
+    my $coderef = *{$orig}{CODE};
+    *{$orig} = sub {
         my $caller = @_ ? $_[0] : caller;
         _assert_module($caller);
-        goto $bootstrap_orig;
+        goto $coderef;
     };
-    # XSLoader entered Core in Perl 5.6
-    if ( $] >= 5.006 ) {
-        require XSLoader;
-        my $xsload_orig = *{"XSLoader::load"}{CODE};
-        *XSLoader::load = sub {
-            my $caller = @_ ? $_[0] : caller;
-            _assert_module($caller);
-            goto $xsload_orig;
-        };
-    }
 }
 
 1;
