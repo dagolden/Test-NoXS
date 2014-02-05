@@ -26,7 +26,7 @@ sub import {
 }
 
 #die unless module is in core and hasn't been upgraded.
-sub test_module_in_core {
+sub _test_module_in_core {
     my $module = shift;
     # Uses explicit $PERL_CORE_VERSION instead of default for testing
     die "XS disabled for non-core modules" unless Module::CoreList::is_core( $module, undef, $PERL_CORE_VERSION );
@@ -51,7 +51,7 @@ sub test_module_in_core {
         my $caller = @_ ? $_[0] : caller;
         die "XS disabled" if $no_xs_all;
         die "XS disable for $caller" if grep { $caller eq $_ } @no_xs_modules;
-        if( $xs_core_only && test_module_in_core( $caller )) {
+        if( $xs_core_only && _test_module_in_core( $caller )) {
             goto $bootstrap_orig;
         }
         goto $bootstrap_orig;
@@ -64,7 +64,7 @@ sub test_module_in_core {
             my $caller = @_ ? $_[0] : caller;
             die "XS disabled" if $no_xs_all;
             die "XS disable for $caller" if grep { $caller eq $_ } @no_xs_modules;
-            if( $xs_core_only && test_module_in_core( $caller )) {
+            if( $xs_core_only && _test_module_in_core( $caller )) {
                 goto $bootstrap_orig;
             }
             goto $xsload_orig;
