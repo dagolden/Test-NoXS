@@ -25,7 +25,7 @@ is( $@, q{}, "told Test::NoXS only to allow core modules to load XS" );
 };
 
 {
-    local $Test::NoXS::PERL_CORE_VERSION = 'v5.14.2';    #version 1.23 for List::Util
+    local $Test::NoXS::PERL_CORE_VERSION = '5.014002';    #version 1.23 for List::Util
     ok Test::NoXS::test_module_in_core('List::Util'),
 "Mock perl version $Test::NoXS::PERL_CORE_VERSION and Mock List::Util version 1.23";
 
@@ -33,5 +33,6 @@ is( $@, q{}, "told Test::NoXS only to allow core modules to load XS" );
         Test::NoXS::test_module_in_core('Cwd');
         fail "should never get here";
     };
-    like $@, '/3\.99/',"Died properly: $@";
+    (my $err = $@) =~ s/ at \S+ line.*//;
+    like $err, '/3\.99/',"Died properly: $err";
 };
