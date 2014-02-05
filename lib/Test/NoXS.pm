@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+
 package Test::NoXS;
 # ABSTRACT: Prevent a module from loading its XS code
 # VERSION
@@ -10,18 +11,18 @@ my @no_xs_modules;
 my $no_xs_all;
 my $xs_core_only;
 
-our $PERL_CORE_VERSION = sprintf("%vd", $^V);
+our $PERL_CORE_VERSION = sprintf( "%vd", $^V );
 
 sub import {
     my $class = shift;
-    if  ( grep { /:all/ } @_ ) {
-      $no_xs_all = 1;
+    if ( grep { /:all/ } @_ ) {
+        $no_xs_all = 1;
     }
     elsif ( grep { /:xs_core_only/ } @_ ) {
         $xs_core_only = 1;
     }
     else {
-      push @no_xs_modules, @_;
+        push @no_xs_modules, @_;
     }
 }
 
@@ -29,12 +30,13 @@ sub import {
 sub _test_module_in_core {
     my $module = shift;
     # Uses explicit $PERL_CORE_VERSION instead of default for testing
-    die "XS disabled for non-core modules" unless Module::CoreList::is_core( $module, undef, $PERL_CORE_VERSION );
+    die "XS disabled for non-core modules"
+      unless Module::CoreList::is_core( $module, undef, $PERL_CORE_VERSION );
     my $core_module_version = $Module::CoreList::version{$PERL_CORE_VERSION}{$module};
-    my $module_version = $module->VERSION;
-    if( $core_module_version != $module_version ) {
+    my $module_version      = $module->VERSION;
+    if ( $core_module_version != $module_version ) {
         die "$module installed version: $module_version"
-        ." != $core_module_version ( shipped with perl $PERL_CORE_VERSION )";
+          . " != $core_module_version ( shipped with perl $PERL_CORE_VERSION )";
     }
     return 1;
 }
@@ -51,7 +53,7 @@ sub _test_module_in_core {
         my $caller = @_ ? $_[0] : caller;
         die "XS disabled" if $no_xs_all;
         die "XS disable for $caller" if grep { $caller eq $_ } @no_xs_modules;
-        if( $xs_core_only && _test_module_in_core( $caller )) {
+        if ( $xs_core_only && _test_module_in_core($caller) ) {
             goto $bootstrap_orig;
         }
         goto $bootstrap_orig;
@@ -64,14 +66,13 @@ sub _test_module_in_core {
             my $caller = @_ ? $_[0] : caller;
             die "XS disabled" if $no_xs_all;
             die "XS disable for $caller" if grep { $caller eq $_ } @no_xs_modules;
-            if( $xs_core_only && _test_module_in_core( $caller )) {
+            if ( $xs_core_only && _test_module_in_core($caller) ) {
                 goto $bootstrap_orig;
             }
             goto $xsload_orig;
         };
     }
 }
-
 
 1;
 
