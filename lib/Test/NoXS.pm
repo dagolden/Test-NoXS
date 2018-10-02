@@ -5,7 +5,7 @@ use warnings;
 package Test::NoXS;
 # ABSTRACT: Prevent a module from loading its XS code
 
-our $VERSION = '1.04';
+our $VERSION = '1.05';
 
 use Module::CoreList 3.00;
 require DynaLoader;

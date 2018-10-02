@@ -2,6 +2,8 @@ Revision history for Perl module Test::NoXS
 
 {{$NEXT}}
 
+1.04      2018-10-02 17:43:22-04:00 America/New_York
+
     [FIXED]
 
     - Changed from Fcntl to Socket for testing :all
