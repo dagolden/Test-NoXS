@@ -2,8 +2,12 @@ Revision history for Perl module Test::NoXS
 
 {{$NEXT}}
 
+    [FIXED]
+
+    - Changed from Fcntl to Socket for testing :all
+
 1.03      2014-02-05 18:34:37-05:00 America/New_York
-    
+
     [INCOMPATIBLE CHANGES]
 
     - Dropped support for Perls before v5.6
